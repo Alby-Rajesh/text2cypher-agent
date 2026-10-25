@@ -117,10 +117,13 @@ text2cypher evaluate --limit 200 --langsmith
 
 Questions come from the dataset's **test** split for the connected database; few-shot examples come only from the **train** split. Both the gold and the generated queries run against the live database and their results are compared. Results are written to `output/eval/<model>/`.
 
-| Model | Execution accuracy | First-try accuracy | Valid queries |
-|---|---|---|---|
-| Base Qwen2.5-Coder-3B | run `evaluate` with `T2C_LLM__CYPHER_MODEL=Qwen/Qwen2.5-Coder-3B-Instruct` | | |
-| Fine-tuned adapter | run `evaluate` with `T2C_LLM__CYPHER_MODEL=text2cypher` | | |
+| Cypher model | Questions | Execution accuracy | Valid queries | Exact match | p50 latency |
+|---|---|---|---|---|---|
+| Qwen3.8-27B, 4-shot (Groq) | 100 | **60%** | 95% | 9% | 3.7 s |
+| Base Qwen2.5-Coder-3B | | run `evaluate` with `T2C_LLM__CYPHER_MODEL=Qwen/Qwen2.5-Coder-3B-Instruct` | | | |
+| Fine-tuned 3B adapter | | run `evaluate` with `T2C_LLM__CYPHER_MODEL=text2cypher` | | | |
+
+Measured on the first 100 `movies` test questions against a local Neo4j 5.26 loaded with the standard movies graph (`T2C_NEO4J__DATABASE=neo4j`, `T2C_NEO4J__DATASET=movies`). That graph has no `Movie.votes` property, so about 15% of gold queries return empty results there; a prediction only counts as correct when its rows match the gold rows exactly. Exact match is low by design: many different queries return the same rows, which is why execution accuracy is the headline metric.
 
 ## Configuration
 
@@ -131,7 +134,7 @@ All settings come from environment variables (or `.env`) with the `T2C_` prefix 
 | `T2C_LLM__BASE_URL` | `http://localhost:8000/v1` | OpenAI-compatible endpoint (vLLM, OpenAI, Groq …) |
 | `T2C_LLM__CYPHER_MODEL` | `text2cypher` | model or LoRA adapter that writes Cypher |
 | `T2C_LLM__ANSWER_MODEL` | `Qwen/Qwen2.5-Coder-3B-Instruct` | model that phrases the answer |
-| `T2C_NEO4J__*` | public movies demo | connection, query timeout, row limit |
+| `T2C_NEO4J__*` | public movies demo | connection, query timeout, row limit; `DATASET` picks the benchmark split when the database name differs (e.g. a local copy of movies) |
 | `T2C_REDIS__URL` | `redis://localhost:6379/0` | cache and memory; empty disables Redis |
 | `T2C_AGENT__MAX_ATTEMPTS` | `3` | generate → validate → correct loop limit |
 | `T2C_AGENT__FEW_SHOT_K` | `4` | retrieved examples per question |

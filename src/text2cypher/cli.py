@@ -56,7 +56,7 @@ def examples(limit: int = typer.Option(2000, help="Maximum examples to keep.")) 
     from .examples import load_split, write_jsonl
 
     settings = get_settings()
-    rows = load_split(settings.neo4j.database, "train", limit)
+    rows = load_split(settings.neo4j.dataset_name, "train", limit)
     write_jsonl(rows, settings.agent.examples_path)
     typer.echo(f"wrote {len(rows)} examples to {settings.agent.examples_path}")
 
@@ -65,6 +65,7 @@ def examples(limit: int = typer.Option(2000, help="Maximum examples to keep.")) 
 def evaluate(
     limit: int = typer.Option(200, help="Test questions to evaluate."),
     out: Path = typer.Option(Path("output/eval"), help="Where to write results."),
+    workers: int = typer.Option(4, help="Questions evaluated in parallel."),
     langsmith: bool = typer.Option(False, "--langsmith", help="Also log the run as a LangSmith experiment."),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
 ) -> None:
@@ -75,12 +76,12 @@ def evaluate(
     _logging(verbose)
     settings = get_settings()
     agent = build_agent(settings)
-    test = load_split(settings.neo4j.database, "test", limit)
-    summary = run_eval(agent, agent.deps.db, test, out / settings.llm.cypher_model.replace("/", "_"))
+    test = load_split(settings.neo4j.dataset_name, "test", limit)
+    summary = run_eval(agent, agent.deps.db, test, out / settings.llm.cypher_model.replace("/", "_"), workers)
     typer.echo(json.dumps(summary, indent=2))
     if langsmith:
         run_langsmith_eval(
-            agent, agent.deps.db, test, f"text2cypher-{settings.neo4j.database}", settings.llm.cypher_model
+            agent, agent.deps.db, test, f"text2cypher-{settings.neo4j.dataset_name}", settings.llm.cypher_model
         )
 
 

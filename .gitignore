@@ -10,3 +10,4 @@ data/finetune/
 .ruff_cache/
 .ipynb_checkpoints/
 .DS_Store
+data/examples.jsonl

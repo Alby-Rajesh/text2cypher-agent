@@ -23,6 +23,7 @@ def chat_model(settings: LLMSettings, model: str, max_tokens: int | None = None)
         max_tokens=max_tokens or settings.max_tokens,
         timeout=settings.timeout,
         max_retries=settings.max_retries,
+        extra_body=settings.extra or None,
     )
 
 

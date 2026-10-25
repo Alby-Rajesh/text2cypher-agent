@@ -4,7 +4,7 @@ from functools import cached_property
 from typing import Any
 
 from langsmith import traceable
-from neo4j import Driver, GraphDatabase, Query, RoutingControl
+from neo4j import Driver, GraphDatabase, RoutingControl, unit_of_work
 from neo4j.exceptions import Neo4jError
 from neo4j.graph import Node, Path, Relationship
 
@@ -109,8 +109,9 @@ class GraphDB:
 
     @traceable(name="run_cypher", run_type="tool")
     def run(self, cypher: str) -> list[dict]:
+        @unit_of_work(timeout=self.settings.query_timeout)
         def work(tx):
-            result = tx.run(Query(cypher, timeout=self.settings.query_timeout))
+            result = tx.run(cypher)
             return [to_jsonable(r.data()) for r in result.fetch(self.settings.row_limit)]
 
         with self.driver.session(database=self.settings.database, default_access_mode="READ") as session:

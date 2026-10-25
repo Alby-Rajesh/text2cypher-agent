@@ -1,6 +1,7 @@
 import os
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,6 +16,7 @@ class LLMSettings(BaseModel):
     max_tokens: int = Field(512, gt=0)
     timeout: float = Field(60, gt=0)
     max_retries: int = Field(2, ge=0)
+    extra: dict[str, Any] = Field(default_factory=dict)
 
 
 class Neo4jSettings(BaseModel):
@@ -22,8 +24,13 @@ class Neo4jSettings(BaseModel):
     user: str = "movies"
     password: SecretStr = SecretStr("movies")
     database: str = "movies"
+    dataset: str | None = None
     query_timeout: float = Field(15, gt=0)
     row_limit: int = Field(50, ge=1)
+
+    @property
+    def dataset_name(self) -> str:
+        return self.dataset or self.database
 
 
 class RedisSettings(BaseModel):
