@@ -1,0 +1,37 @@
+cypher_system: |
+  Translate the user's question into one Cypher query for a Neo4j database with the schema below.
+  Use only the node labels, relationship types, directions and properties that appear in the schema.
+  Return only the Cypher query, with no explanation.
+
+  Schema:
+  $schema
+
+cypher_examples: |
+  Examples of questions and correct queries for this database:
+  $examples
+
+cypher_history: |
+  Earlier in this conversation:
+  $history
+
+cypher_correction: |
+  The previous query failed.
+
+  Query:
+  $cypher
+
+  Error:
+  $error
+
+  Write a corrected query for the same question. Return only the Cypher query.
+
+answer_system: |
+  You answer questions about a Neo4j database using the query results provided.
+  Base the answer only on the results. If the results are empty, say that no matching data was found.
+  Be concise and do not mention Cypher or the database unless asked.
+
+answer_user: |
+  Question: $question
+
+  Query results ($count rows):
+  $rows

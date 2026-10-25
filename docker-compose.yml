@@ -1,0 +1,46 @@
+services:
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      T2C_REDIS__URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  vllm:
+    profiles: ["gpu"]
+    image: vllm/vllm-openai:latest
+    command: >
+      --model Qwen/Qwen2.5-Coder-3B-Instruct
+      --enable-lora
+      --lora-modules text2cypher=${T2C_LORA_ADAPTER:-Alby-Rajesh/text2cypher-qwen2.5-coder-3b-lora}
+      --max-lora-rank 16
+      --max-model-len 4096
+    ports:
+      - "8000:8000"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  hf-cache:

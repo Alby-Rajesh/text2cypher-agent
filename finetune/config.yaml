@@ -1,0 +1,44 @@
+data:
+  dataset: neo4j/text2cypher-2024v1
+  max_schema_chars: 6000
+  train_samples: 12000
+  eval_samples: 300
+  seed: 42
+  output_dir: data/finetune
+
+model:
+  base: Qwen/Qwen2.5-Coder-3B-Instruct
+  max_length: 2048
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+training:
+  output_dir: checkpoints/text2cypher-qwen2.5-coder-3b
+  num_train_epochs: 1
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 8
+  learning_rate: 0.0002
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  logging_steps: 10
+  eval_strategy: steps
+  eval_steps: 200
+  save_strategy: steps
+  save_steps: 200
+  save_total_limit: 2
+  gradient_checkpointing: true
+  fp16: true
+  bf16: false
+  report_to: none
+  seed: 42
+
+hub:
+  push: true
+  model_id: Alby-Rajesh/text2cypher-qwen2.5-coder-3b-lora
+  private: false
